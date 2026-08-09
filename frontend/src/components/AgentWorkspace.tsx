@@ -28,7 +28,6 @@ export function AgentWorkspace({
   const [showMenu, setShowMenu] = useState(false);
 
   const isActive  = status?.status === 'ACTIVE';
-  const isStopped = !isActive;
   const runtimeState = status?.state ?? '';
   const dbStatus     = status?.status ?? 'STOPPED';
 

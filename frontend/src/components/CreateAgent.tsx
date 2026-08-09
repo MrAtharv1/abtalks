@@ -1,5 +1,4 @@
 import React, { useState } from 'react';
-import { useAgentState } from '../hooks/useAgentState';
 import type { AgentInitRequest } from '../types/backend';
 
 interface CreateAgentProps {
