@@ -23,9 +23,14 @@ export function useAgentState() {
   const [isStarting,     setIsStarting]     = useState(false);
   const [isStopping,     setIsStopping]     = useState(false);
 
+  const handleNotFound = useCallback(() => {
+    setLiveAgentId(null);
+    localStorage.removeItem(STORAGE_KEY);
+  }, []);
+
   // When in demo mode, do not poll live backend
   const activePollerId = isDemoMode ? null : liveAgentId;
-  const poller = useAgentPoller(activePollerId);
+  const poller = useAgentPoller(activePollerId, handleNotFound);
 
   // Persist live agentId
   useEffect(() => {

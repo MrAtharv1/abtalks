@@ -38,6 +38,57 @@ export function AgentWorkspace({
 
   // Loading state — workspace not yet fetched
   if (!workspace || !status) {
+    if (error) {
+      return (
+        <div style={{
+          minHeight: '100dvh',
+          display: 'flex',
+          alignItems: 'center',
+          justifyContent: 'center',
+          background: 'var(--color-bg)',
+          padding: 24,
+        }}>
+          <div style={{
+            maxWidth: 420,
+            width: '100%',
+            textAlign: 'center',
+            background: 'var(--color-bg)',
+            border: '1px solid var(--color-border)',
+            borderRadius: 12,
+            padding: '32px 24px',
+          }}>
+            <div style={{ fontSize: 32, marginBottom: 12 }}>⚠️</div>
+            <h2 style={{ fontSize: 16, fontWeight: 600, color: 'var(--color-text)', marginBottom: 8 }}>
+              Agent Session Expired
+            </h2>
+            <p style={{ fontSize: 13, color: 'var(--color-text-secondary)', lineHeight: 1.5, marginBottom: 20 }}>
+              The server returned an error ({error}). If the backend was redeployed or restarted, the previous in-memory session was cleared.
+            </p>
+            <div style={{ display: 'flex', flexDirection: 'column', gap: 8 }}>
+              <button
+                type="button"
+                onClick={onReset}
+                style={{
+                  width: '100%',
+                  padding: '10px 16px',
+                  fontSize: 13,
+                  fontWeight: 600,
+                  color: '#ffffff',
+                  background: 'var(--color-text)',
+                  border: 'none',
+                  borderRadius: 8,
+                  cursor: 'pointer',
+                  fontFamily: 'inherit',
+                }}
+              >
+                Create New Agent →
+              </button>
+            </div>
+          </div>
+        </div>
+      );
+    }
+
     return (
       <div style={{
         minHeight: '100dvh',
