@@ -2,31 +2,52 @@ import { useState, useCallback, useEffect } from 'react';
 import { endpoints } from '../api/endpoints';
 import { useAgentPoller } from './useAgentPoller';
 import type { AgentInitRequest } from '../types/backend';
+import {
+  DEMO_AGENT_ID,
+  DEMO_FEED,
+  DEMO_STATUS,
+  DEMO_WORKSPACE,
+} from '../data/demoResearchData';
 
 const STORAGE_KEY = 'thread_agent_id';
+const DEMO_MODE_KEY = 'thread_demo_mode';
 
 export function useAgentState() {
-  const [agentId, setAgentId] = useState<string | null>(() =>
+  const [liveAgentId, setLiveAgentId] = useState<string | null>(() =>
     localStorage.getItem(STORAGE_KEY)
+  );
+  const [isDemoMode, setIsDemoMode] = useState<boolean>(() =>
+    localStorage.getItem(DEMO_MODE_KEY) === 'true'
   );
   const [isInitializing, setIsInitializing] = useState(false);
   const [isStarting,     setIsStarting]     = useState(false);
   const [isStopping,     setIsStopping]     = useState(false);
 
-  const poller = useAgentPoller(agentId);
+  // When in demo mode, do not poll live backend
+  const activePollerId = isDemoMode ? null : liveAgentId;
+  const poller = useAgentPoller(activePollerId);
 
-  // Persist agentId
+  // Persist live agentId
   useEffect(() => {
-    if (agentId) {
-      localStorage.setItem(STORAGE_KEY, agentId);
+    if (liveAgentId) {
+      localStorage.setItem(STORAGE_KEY, liveAgentId);
     } else {
       localStorage.removeItem(STORAGE_KEY);
     }
-  }, [agentId]);
+  }, [liveAgentId]);
 
-  // Drive polling from real backend state.
-  // Backend auto-starts on init so agent is ACTIVE immediately.
+  // Persist demo mode
   useEffect(() => {
+    if (isDemoMode) {
+      localStorage.setItem(DEMO_MODE_KEY, 'true');
+    } else {
+      localStorage.removeItem(DEMO_MODE_KEY);
+    }
+  }, [isDemoMode]);
+
+  // Drive polling from real backend state when not in demo mode
+  useEffect(() => {
+    if (isDemoMode) return;
     if (!poller.status) return;
     const isActive =
       poller.status.status === 'ACTIVE' ||
@@ -36,14 +57,14 @@ export function useAgentState() {
     } else if (!isActive && poller.isPolling && !isStarting) {
       poller.setIsPolling(false);
     }
-  }, [poller.status?.status, poller.status?.state, isStarting]);
+  }, [isDemoMode, poller.status?.status, poller.status?.state, isStarting]);
 
   const initAgent = useCallback(async (req: AgentInitRequest) => {
     setIsInitializing(true);
     try {
       const res = await endpoints.initAgent(req);
-      setAgentId(res.agentId);
-      // Backend is now ACTIVE. Start polling immediately.
+      setLiveAgentId(res.agentId);
+      setIsDemoMode(false);
       poller.setIsPolling(true);
     } finally {
       setIsInitializing(false);
@@ -51,36 +72,59 @@ export function useAgentState() {
   }, [poller]);
 
   const startAgent = useCallback(async () => {
-    if (!agentId || isStarting) return;
+    if (isDemoMode || !liveAgentId || isStarting) return;
     setIsStarting(true);
     try {
-      await endpoints.startAgent(agentId);
+      await endpoints.startAgent(liveAgentId);
       poller.setIsPolling(true);
       await poller.forceRefresh();
     } finally {
       setIsStarting(false);
     }
-  }, [agentId, isStarting, poller]);
+  }, [isDemoMode, liveAgentId, isStarting, poller]);
 
   const stopAgent = useCallback(async () => {
-    if (!agentId || isStopping) return;
+    if (isDemoMode || !liveAgentId || isStopping) return;
     setIsStopping(true);
     try {
-      await endpoints.stopAgent(agentId);
+      await endpoints.stopAgent(liveAgentId);
       await poller.forceRefresh();
       poller.setIsPolling(false);
     } finally {
       setIsStopping(false);
     }
-  }, [agentId, isStopping, poller]);
+  }, [isDemoMode, liveAgentId, isStopping, poller]);
 
   const resetAgent = useCallback(() => {
-    setAgentId(null);
+    setLiveAgentId(null);
+    setIsDemoMode(false);
     poller.setIsPolling(false);
   }, [poller]);
 
+  const enableDemoMode = useCallback(() => {
+    setIsDemoMode(true);
+    poller.setIsPolling(false);
+  }, [poller]);
+
+  const disableDemoMode = useCallback(() => {
+    setIsDemoMode(false);
+    if (liveAgentId) {
+      poller.setIsPolling(true);
+    }
+  }, [liveAgentId, poller]);
+
+  const activeAgentId = isDemoMode ? DEMO_AGENT_ID : liveAgentId;
+  const activeStatus = isDemoMode ? DEMO_STATUS : poller.status;
+  const activeWorkspace = isDemoMode ? DEMO_WORKSPACE : poller.workspace;
+  const activeFeed = isDemoMode ? DEMO_FEED : poller.feed;
+  const activeError = isDemoMode ? null : poller.error;
+
   return {
-    agentId,
+    agentId: activeAgentId,
+    liveAgentId,
+    isDemoMode,
+    enableDemoMode,
+    disableDemoMode,
     isInitializing,
     isStarting,
     isStopping,
@@ -88,6 +132,12 @@ export function useAgentState() {
     startAgent,
     stopAgent,
     resetAgent,
-    ...poller,
+    status: activeStatus,
+    workspace: activeWorkspace,
+    feed: activeFeed,
+    error: activeError,
+    isPolling: isDemoMode ? false : poller.isPolling,
+    setIsPolling: poller.setIsPolling,
+    forceRefresh: poller.forceRefresh,
   };
 }

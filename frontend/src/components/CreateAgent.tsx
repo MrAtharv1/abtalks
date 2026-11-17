@@ -4,9 +4,10 @@ import type { AgentInitRequest } from '../types/backend';
 interface CreateAgentProps {
   onInit: (req: AgentInitRequest) => Promise<void>;
   isInitializing: boolean;
+  onEnableDemo?: () => void;
 }
 
-function CreateAgent({ onInit, isInitializing }: CreateAgentProps) {
+function CreateAgent({ onInit, isInitializing, onEnableDemo }: CreateAgentProps) {
   const [name,   setName]   = useState('');
   const [domain, setDomain] = useState('');
 
@@ -187,6 +188,64 @@ function CreateAgent({ onInit, isInitializing }: CreateAgentProps) {
               'Create Agent →'
             )}
           </button>
+
+          {onEnableDemo && (
+            <>
+              <div style={{
+                display: 'flex',
+                alignItems: 'center',
+                margin: '22px 0 16px',
+                gap: 12,
+              }}>
+                <div style={{ flex: 1, height: 1, background: 'var(--color-border)' }} />
+                <span style={{
+                  fontSize: 10,
+                  fontWeight: 600,
+                  color: 'var(--color-text-tertiary)',
+                  textTransform: 'uppercase',
+                  letterSpacing: '0.08em',
+                }}>
+                  or bypass cold start
+                </span>
+                <div style={{ flex: 1, height: 1, background: 'var(--color-border)' }} />
+              </div>
+
+              <button
+                id="explore-demo-btn"
+                type="button"
+                onClick={onEnableDemo}
+                style={{
+                  display: 'flex',
+                  alignItems: 'center',
+                  justifyContent: 'center',
+                  gap: 8,
+                  width: '100%',
+                  padding: '10px 14px',
+                  fontSize: 13,
+                  fontWeight: 600,
+                  color: 'var(--color-text)',
+                  background: 'var(--color-bg-subtle)',
+                  border: '1px solid var(--color-border)',
+                  borderRadius: 8,
+                  cursor: 'pointer',
+                  fontFamily: 'inherit',
+                  letterSpacing: '-0.01em',
+                  transition: 'background 0.15s, border-color 0.15s',
+                }}
+                onMouseEnter={e => {
+                  (e.currentTarget as HTMLButtonElement).style.background = 'var(--color-bg-muted)';
+                  (e.currentTarget as HTMLButtonElement).style.borderColor = 'var(--color-text-tertiary)';
+                }}
+                onMouseLeave={e => {
+                  (e.currentTarget as HTMLButtonElement).style.background = 'var(--color-bg-subtle)';
+                  (e.currentTarget as HTMLButtonElement).style.borderColor = 'var(--color-border)';
+                }}
+              >
+                <span style={{ color: '#8b5cf6', fontSize: 14 }}>⚡</span>
+                Explore Live Demo Trace (Instant)
+              </button>
+            </>
+          )}
         </form>
       </div>
 

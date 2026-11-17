@@ -11,8 +11,10 @@ interface FeedPostProps {
 export function FeedPost({ post, domain, index }: FeedPostProps) {
   const [showRationale, setShowRationale] = useState(false);
   const [showSources,   setShowSources]   = useState(false);
+  const [showGateDetails, setShowGateDetails] = useState(false);
 
   const timeAgo = formatDistanceToNow(new Date(post.createdAt), { addSuffix: true });
+  const isRejected = post.status === 'REJECTED' || post.status === 'FAILED';
 
   return (
     <article
@@ -81,6 +83,95 @@ export function FeedPost({ post, domain, index }: FeedPostProps) {
       >
         {timeAgo}
       </time>
+
+      {/* Quality Gate Rejection Details if applicable */}
+      {isRejected && (post.rejection_reason || post.quality_gate_checks) && (
+        <div style={{
+          marginTop: 14,
+          padding: '10px 14px',
+          background: '#fff1f2',
+          border: '1px solid #fecdd3',
+          borderRadius: 8,
+        }}>
+          <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+            <div style={{ display: 'flex', alignItems: 'center', gap: 6 }}>
+              <span style={{ fontSize: 13, color: '#e11d48' }}>🛡️</span>
+              <span style={{ fontSize: 12, fontWeight: 600, color: '#9f1239' }}>
+                Quality Gate Rejection Verdict
+              </span>
+            </div>
+            {post.quality_gate_checks && (
+              <button
+                type="button"
+                onClick={() => setShowGateDetails(!showGateDetails)}
+                style={{
+                  background: 'none',
+                  border: 'none',
+                  padding: 0,
+                  cursor: 'pointer',
+                  fontSize: 11,
+                  fontWeight: 600,
+                  color: '#be123c',
+                  display: 'flex',
+                  alignItems: 'center',
+                  gap: 3,
+                }}
+              >
+                {showGateDetails ? 'Hide Checks ▲' : 'View Checks ▼'}
+              </button>
+            )}
+          </div>
+
+          <p style={{
+            margin: '6px 0 0',
+            fontSize: 12,
+            color: '#881337',
+            lineHeight: 1.5,
+            fontFamily: 'monospace',
+          }}>
+            {post.rejection_reason || 'Candidate suppressed by editorial gate.'}
+          </p>
+
+          {showGateDetails && post.quality_gate_checks && (
+            <div style={{
+              marginTop: 10,
+              paddingTop: 10,
+              borderTop: '1px solid #fecdd3',
+              display: 'flex',
+              flexDirection: 'column',
+              gap: 6,
+            }}>
+              {post.quality_gate_checks.map((check, idx) => (
+                <div key={idx} style={{
+                  display: 'flex',
+                  alignItems: 'flex-start',
+                  gap: 6,
+                  fontSize: 11,
+                }}>
+                  <span style={{
+                    color: check.passed ? '#15803d' : '#b91c1c',
+                    fontWeight: 700,
+                    width: 14,
+                  }}>
+                    {check.passed ? '✓' : '✗'}
+                  </span>
+                  <div style={{ flex: 1 }}>
+                    <span style={{
+                      fontWeight: 600,
+                      color: check.passed ? '#166534' : '#991b1b',
+                    }}>
+                      {check.name}:{' '}
+                    </span>
+                    <span style={{ color: '#4c0519' }}>
+                      {check.details}
+                    </span>
+                  </div>
+                </div>
+              ))}
+            </div>
+          )}
+        </div>
+      )}
 
       {/* Rationale */}
       {post.rationale && (

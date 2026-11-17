@@ -19,6 +19,9 @@ export interface PostResponse {
   sources: string[];
   status?: string;
   is_candidate?: boolean;
+  rejection_reason?: string;
+  editorial_score?: number;
+  quality_gate_checks?: { name: string; passed: boolean; details: string }[];
 }
 
 export interface FeedResponse {
@@ -46,6 +49,7 @@ export interface EvidenceResponse {
   confidence: number;
   polarity: string;
   source_url?: string;
+  source_title?: string;
 }
 
 export interface SourceResponse {
@@ -65,12 +69,23 @@ export interface QuestionResponse {
   evidence: EvidenceResponse[];
 }
 
+export interface BeliefRevisionStep {
+  cycle: number;
+  prevConfidence: number;
+  newConfidence: number;
+  changeType: 'SUPPORTED' | 'DISPUTED' | 'WEAKENED' | 'INITIAL';
+  triggerClaim: string;
+  triggerSourceUrl?: string;
+  timestamp: string;
+}
+
 export interface BeliefResponse {
   id: string;
   statement: string;
   confidence: number;
   importance: number;
   status: string;
+  trajectory?: BeliefRevisionStep[];
 }
 
 export interface ThreadResponse {
@@ -89,4 +104,16 @@ export interface WorkspaceResponse {
   persona: PersonaInput;
   threads: ThreadResponse[];
   sources: SourceResponse[];
+}
+
+export interface DemoResearchRun {
+  cycle: number;
+  timestamp: string;
+  topic: string;
+  queriesGenerated: string[];
+  sourcesAnalyzed: number;
+  yieldScore: number;
+  beliefUpdates: string[];
+  decision: 'POST_PUBLISHED' | 'POST_REJECTED' | 'NO_POST_COOLDOWN';
+  rationaleSummary: string;
 }

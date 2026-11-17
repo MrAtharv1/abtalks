@@ -15,14 +15,16 @@ interface AgentWorkspaceProps {
   error:      string | null;
   isStarting: boolean;
   isStopping: boolean;
+  isDemoMode?: boolean;
   onStart:    () => void;
   onStop:     () => void;
   onReset:    () => void;
+  onExitDemo?: () => void;
 }
 
 export function AgentWorkspace({
   agentId, status, workspace, feed, error,
-  isStarting, isStopping, onStart, onStop, onReset,
+  isStarting, isStopping, isDemoMode, onStart, onStop, onReset, onExitDemo,
 }: AgentWorkspaceProps) {
   const [tab, setTab] = useState<Tab>('feed');
   const [showMenu, setShowMenu] = useState(false);
@@ -64,6 +66,67 @@ export function AgentWorkspace({
       background: 'var(--color-bg)',
       overflow: 'hidden',
     }}>
+      {/* ─── Demo Mode Banner ──────────────────────────────────────── */}
+      {isDemoMode && (
+        <div style={{
+          background: '#18181b',
+          borderBottom: '1px solid #27272a',
+          padding: '8px 20px',
+          display: 'flex',
+          alignItems: 'center',
+          justifyContent: 'space-between',
+          fontSize: 12,
+          color: '#e4e4e7',
+          flexShrink: 0,
+          zIndex: 20,
+        }}>
+          <div style={{ display: 'flex', alignItems: 'center', gap: 10, flexWrap: 'wrap' }}>
+            <span style={{
+              background: '#8b5cf6',
+              color: '#ffffff',
+              fontSize: 10,
+              fontWeight: 700,
+              padding: '2px 7px',
+              borderRadius: 4,
+              letterSpacing: '0.06em',
+              textTransform: 'uppercase',
+            }}>
+              ⚡ Demo Trace Active
+            </span>
+            <span style={{ color: '#a1a1aa' }}>
+              Previewing 5-cycle autonomous research trace for <strong>Ada Vance</strong> (AI Systems Security). Zero backend wait.
+            </span>
+          </div>
+          {onExitDemo && (
+            <button
+              id="exit-demo-btn"
+              onClick={onExitDemo}
+              style={{
+                background: 'rgba(255, 255, 255, 0.08)',
+                color: '#ffffff',
+                border: '1px solid rgba(255, 255, 255, 0.2)',
+                borderRadius: 6,
+                padding: '4px 12px',
+                fontSize: 11,
+                fontWeight: 600,
+                cursor: 'pointer',
+                fontFamily: 'inherit',
+                whiteSpace: 'nowrap',
+                transition: 'all 0.15s ease',
+              }}
+              onMouseEnter={e => {
+                (e.currentTarget as HTMLButtonElement).style.background = 'rgba(255, 255, 255, 0.16)';
+              }}
+              onMouseLeave={e => {
+                (e.currentTarget as HTMLButtonElement).style.background = 'rgba(255, 255, 255, 0.08)';
+              }}
+            >
+              Switch to Live Agent Runtime →
+            </button>
+          )}
+        </div>
+      )}
+
       {/* ─── Top Header ─────────────────────────────────────────────── */}
       <header style={{
         flexShrink: 0,
@@ -250,9 +313,10 @@ export function AgentWorkspace({
               domain={personaDomain}
               error={error}
               isActive={isActive}
+              isDemoMode={isDemoMode}
             />
           ) : (
-            <div style={{ padding: '0 32px', maxWidth: 720 }}>
+            <div style={{ padding: '0 32px', maxWidth: 760, width: '100%', margin: '0 auto' }}>
               {/* Persona header in workspace tab */}
               <div style={{
                 paddingTop: 28,
@@ -283,7 +347,7 @@ export function AgentWorkspace({
                   {personaDomain}
                 </p>
               </div>
-              <WorkspacePanel workspace={workspace} />
+              <WorkspacePanel workspace={workspace} isDemoMode={isDemoMode} />
             </div>
           )}
         </main>

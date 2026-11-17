@@ -16,31 +16,37 @@ function App() {
     workspace,
     feed,
     error,
+    isDemoMode,
+    enableDemoMode,
+    disableDemoMode,
   } = useAgentState();
 
-  // No agent yet — show creation screen
-  if (!agentId) {
+  // No agent yet and not in demo mode — show creation screen
+  if (!agentId && !isDemoMode) {
     return (
       <CreateAgent
         onInit={initAgent}
         isInitializing={isInitializing}
+        onEnableDemo={enableDemoMode}
       />
     );
   }
 
-  // Agent exists — show workspace (wired to real backend)
+  // Agent exists or Demo Mode active — show workspace
   return (
     <AgentWorkspace
-      agentId={agentId}
+      agentId={agentId || 'demo-agent'}
       status={status}
       workspace={workspace}
       feed={feed}
       error={error}
       isStarting={isStarting}
       isStopping={isStopping}
+      isDemoMode={isDemoMode}
       onStart={startAgent}
       onStop={stopAgent}
       onReset={resetAgent}
+      onExitDemo={disableDemoMode}
     />
   );
 }
